@@ -63,7 +63,7 @@ public class AB1Network
    public static void setConfigurationParams()
    {
       numInputNodes = 2;
-      hiddenLayerNumNodes = 1;
+      hiddenLayerNumNodes = 2;
       isTraining = true;
       showInputTable = true;
       showTruthTable = true;
@@ -74,7 +74,7 @@ public class AB1Network
       idealErr = 0.0002;
       lambda = 0.3;
       numTestCases = 4;
-      booleanAlgProblem = "XOR";
+      booleanAlgProblem = "OR";
       activationFunc = "Sigmoid";
    } // public static void setConfigurationParams()
 
@@ -477,7 +477,7 @@ public class AB1Network
             }
             System.out.println();
          }
-      }
+      } // if (showInputTable)
 
       if (isTraining && showTruthTable) 
       {
@@ -486,7 +486,7 @@ public class AB1Network
          {
             System.out.println(truthTable[t]);
          }
-      }
+      } // if (isTraining && showTruthTable)
       
       for (int t = 0; t < numTestCases; t++)
       {
