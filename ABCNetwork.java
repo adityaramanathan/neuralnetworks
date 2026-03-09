@@ -68,7 +68,7 @@ public class ABCNetwork
    public static void setConfigurationParams()
    {
       numInputNodes = 2;
-      hiddenLayerNumNodes = 20;
+      hiddenLayerNumNodes = 5;
       numOutputNodes = 3;
       isTraining = true;
       showInputTable = true;
@@ -87,7 +87,7 @@ public class ABCNetwork
    } // public static void setConfigurationParams()
 
 /**
- * Populates the input table for the network. 
+ * Populates the input table for the network to train or run. 
  */
    public static void populateInputs()
    {
@@ -102,10 +102,10 @@ public class ABCNetwork
    } // public static void populateInputs()
 
 /**
- * Populates the truth table if training the network is desired based on the configuration
- * of the network.
+ * Populates the truth table for the network to train, if and only if training the network is 
+ * desired based on the configuration of the network.
  */
-   public static void populateTruthtable()
+   public static void populateTruthTable()
    {
       truthTable[0][0] = 0.0;
       truthTable[1][0] = 0.0;
@@ -122,7 +122,7 @@ public class ABCNetwork
    } // public static void populateTruthTable()
 
 /**
- * Sets weights manually.
+ * Sets the weights for the network to specific manually entered values.
  */
    public static void setManualWeights()
    {
@@ -179,7 +179,7 @@ public class ABCNetwork
 
       System.out.println("Activation Function: " + activationFunc);
       System.out.println("Number of Test Cases: " + numTestCases);
-   } // public static void echoConfiguratonParams()
+   } // public static void echoConfigurationParams()
 
 /**
  * All major network array memory allocations for the network.
@@ -209,7 +209,8 @@ public class ABCNetwork
    } // public static void allocateMem()
 
 /**
- * Randomly generates weights.
+ * Sets the weights of the network to randomly generated values within bounds provided
+ * in the network configuration.
  */
    public static void randomlyGenerateWeights()
    {
@@ -231,7 +232,8 @@ public class ABCNetwork
    } // public static void randomlyGenerateWeights()
 
 /**
- * Loads the weights from the file whose name is provided in the network configuration.
+ * Loads the weights for the network from the file whose name is provided in the network 
+ * configuration.
  */
    public static void loadWeights() throws IOException
    {
@@ -243,9 +245,8 @@ public class ABCNetwork
 
       if (loadK != numInputNodes || loadJ != hiddenLayerNumNodes || loadI != numOutputNodes)
       {
-         throw new IllegalArgumentException("Weight file configuration does not match network architecture of " +
-            numInputNodes + "-" + hiddenLayerNumNodes + "-" + numOutputNodes)
-         ;
+         throw new IllegalArgumentException(String.format("Weight file configuration does not match network architecture of %d-%d-%d",
+                                                          numInputNodes, hiddenLayerNumNodes, numOutputNodes));
       }
 
       for (int k = 0; k < numInputNodes; k++)
@@ -265,8 +266,7 @@ public class ABCNetwork
       }
 
       in.close();
-   } // public void loadWeights() throws IOException
-
+   } // public static void loadWeights() throws IOException
 
 /**
  * Populates the weights either randomly, loading from a file, or manually based on the
@@ -293,7 +293,7 @@ public class ABCNetwork
    } // public static void populateWeights() throws IOException
 
 /**
- * Saves the weights to the given file name if training saving the weights is desired based 
+ * Saves the weights to the given file name if training saving the weights is desired based
  * on the configuration of the network.
  */
    public static void saveWeights() throws IOException
@@ -324,8 +324,8 @@ public class ABCNetwork
    } // public void saveWeights() throws IOException
 
 /**
- * Populates the input table, the truth table if training the network, and the specifies 
- * initial values for the weights within the network. 
+ * Populates the input table, the truth table if training the network, and the specifies
+ * initial values for the weights within the network.
  */
    public static void populateArrays() throws IOException
    {
@@ -333,16 +333,15 @@ public class ABCNetwork
 
       if (isTraining)
       {
-         populateTruthtable();
+         populateTruthTable();
       }
 
       populateWeights();
-   } // public static void populateArrays()
+   } // public static void populateArrays() throws IOException
 
 /**
- * Helper function for populateArrays() that generates random values for the weights of 
- * the network. In other words, it generates a random double value within a specified 
- * range.
+ * Helper function for populateArrays() that generates a random double value within a
+ * specified range.
  * @param low the lower bound of the range for the random number.
  * @param high the upper bound of the range for the random number.
  * @return the random number within the specified range.
@@ -362,10 +361,10 @@ public class ABCNetwork
    }
 
 /**
- * Defines the activation function for the network as a simple sigmoid function. 
+ * Defines the activation function for the network as a simple sigmoid function.
  * @param theta the sum of the dot product of the activations and the weights in a specific
- * layer of the network. 
- * @return the output when theta is passed into the sigmoid function. 
+ * layer of the network.
+ * @return the output when theta is passed into the sigmoid function.
  */
    public static double fActivation(double theta)
    {
@@ -374,9 +373,9 @@ public class ABCNetwork
 
 /**
  * Defines the derivative of the activation function for the network as the derivative of a
- * simple sigmoid function. 
+ * simple sigmoid function.
  * @param theta the sum of the dot product of the activations and the weights in a specific
- * layer of the network. 
+ * layer of the network.
  * @return the output when theta is passed into the derivative of the sigmoid function.
  */
    public static double fPrimeActivation(double theta)
@@ -406,7 +405,7 @@ public class ABCNetwork
    }
 
 /**
- * Populates the inputActivations array for a specific test case. 
+ * Populates the inputActivations array for a specific test case.
  * @param testCase the index of the test case that wants to be trained or run.
  */
    public static void defineInputActivations(int testCase)
@@ -432,8 +431,8 @@ public class ABCNetwork
          }
 
          hiddenActivations[j] = fActivation(theta_j);
-      }
-      
+      } // for (int j = 0; j < hiddenLayerNumNodes; j++)
+
       for (int i = 0; i < numOutputNodes; i++)
       {
          double theta_i = 0.0;
@@ -443,7 +442,7 @@ public class ABCNetwork
          }
 
          outputActivations[i] = fActivation(theta_i);
-      }
+      } // for (int i = 0; i < numOutputNodes; i++)
    } // public static void runForRunning()
 
 /**
@@ -462,8 +461,8 @@ public class ABCNetwork
 
          thetaJ[j] = dotProductKJ;
          hiddenActivations[j] = fActivation(thetaJ[j]);
-      }
-      
+      } // for (int j = 0; j < hiddenLayerNumNodes; j++)
+
       for (int i = 0; i < numOutputNodes; i++)
       {
          double dotProductJI = 0.0;
@@ -474,7 +473,7 @@ public class ABCNetwork
 
          thetaI[i] = dotProductJI;
          outputActivations[i] = fActivation(thetaI[i]);
-      }
+      } // for (int i = 0; i < numOutputNodes; i++)
    } // public static void runForTraining()
 
 /**
@@ -490,7 +489,7 @@ public class ABCNetwork
       {
          double omega_i = targetOutputs[i] - outputActivations[i];
          psiI[i] = omega_i * fPrimeActivation(thetaI[i]);
-         
+
          for (int j = 0; j < hiddenLayerNumNodes; j++)
          {
             double grad_wji = -hiddenActivations[j] * psiI[i];
@@ -498,7 +497,7 @@ public class ABCNetwork
          }
 
          omega_i_sum += (omega_i * omega_i);
-      }
+      } // for (int i = 0; i < numOutputNodes; i++)
 
       for (int j = 0; j < hiddenLayerNumNodes; j++)
       {
@@ -515,13 +514,13 @@ public class ABCNetwork
             double grad_wkj = -inputActivations[k] * psiJ[j];
             deltaWKJ[k][j] = -lambda * grad_wkj;
          }
-      }
+      } // for (int j = 0; j < hiddenLayerNumNodes; j++)
 
       return (errorSum + errorFunction(omega_i_sum));
    } // public static double train(double errorSum)
 
 /**
- * Updates the weights after the updates are computed in the train() method. 
+ * Updates the weights after the change for each weight is computed in the train() method.
  */
    public static void updateWeights()
    {
@@ -563,7 +562,7 @@ public class ABCNetwork
    } // public static void printTrainingExitInfo()
 
 /**
- * Trains the network given a set of training data: input table and truth table. 
+ * Trains the network given a set of training data: input table and truth table.
  */
    public static void trainNetwork()
    {
@@ -576,21 +575,22 @@ public class ABCNetwork
             {
                targetOutputs[i] = truthTable[t][i];
             }
+
             defineInputActivations(t);
             runForTraining();
             errorTotal = train(errorTotal);
             updateWeights();
-         }
+         } // for (int t = 0; t < numTestCases; t++)
 
          averageError = errorTotal/(double)numTestCases;
          numIter++;
          maxIterationsComplete = numIter >= maximumIter;
          errorThresholdReached = averageError < idealErr;
-      }
+      } // while (!maxIterationsComplete && !errorThresholdReached)
    } // public static void trainNetwork()
 
 /**
- * Runs the network given a set of test cases. 
+ * Runs the network given a set of test cases.
  */
    public static void runNetwork()
    {
@@ -603,11 +603,11 @@ public class ABCNetwork
          {
             outputActivationsRun[t][i] = outputActivations[i];
          }
-      }
+      } // for (int t = 0; t < numTestCases; t++)
    } // public static void runNetwork()
 
 /**
- * Prints the results from training and or running the network. 
+ * Prints the results from training and or running the network.
  */
    public static void printRunningResults()
    {
@@ -626,7 +626,7 @@ public class ABCNetwork
          }
       } // if (showInputTable)
 
-      if (isTraining && showTruthTable) 
+      if (isTraining && showTruthTable)
       {
          System.out.println("Truth Table:");
          for (int t = 0; t < numTestCases; t++)
@@ -660,10 +660,9 @@ public class ABCNetwork
  * Executes the following methods in order: (1) Sets the Configuration Parameters, (2) Prints 
  * the relevant information regarding the configuration parameters, (3) Allocates memory for
  * the important arrays in the network, (4) Populates the arrays, (5) Trains the network if
- * that was requested and outputs training results, (6) Runs the network and outputs running
- * results. 
+ * that was set in the configuration parameters and outputs training results, (6) Runs the 
+ * network, (7) Saves the final weights that were successful, (8) Outputs running results. 
  * @param args arguments from the command line.
- * @throws IOException
  */
    public static void main(String[] args) throws IOException
    {
@@ -690,5 +689,5 @@ public class ABCNetwork
       }
 
       printRunningResults();
-   } // public static void main(String[] args)
+   } // public static void main(String[] args) throws IOException
 } // public class ABCNetwork
