@@ -46,7 +46,6 @@ public class ABCNetwork
    private static double[][] weightsJI;
    private static double[] thetaJ;
    private static double[] thetaI;
-   private static double[] psiJ;
    private static double[] psiI;
    private static double[][] deltaWKJ;
    private static double[][] deltaWJI;
@@ -199,7 +198,6 @@ public class ABCNetwork
       {
          thetaJ = new double[hiddenLayerNumNodes];
          thetaI = new double[numOutputNodes];
-         psiJ = new double[hiddenLayerNumNodes];
          psiI = new double[numOutputNodes];
          deltaWKJ = new double[numInputNodes][hiddenLayerNumNodes];
          deltaWJI = new double[hiddenLayerNumNodes][numOutputNodes];
@@ -507,11 +505,11 @@ public class ABCNetwork
             omega_j += psiI[i] * weightsJI[j][i];
          }
 
-         psiJ[j] = omega_j * fPrimeActivation(thetaJ[j]);
+         double psiJ_j = omega_j * fPrimeActivation(thetaJ[j]);
 
          for (int k = 0; k < numInputNodes; k++)
          {
-            double grad_wkj = -inputActivations[k] * psiJ[j];
+            double grad_wkj = -inputActivations[k] * psiJ_j;
             deltaWKJ[k][j] = -lambda * grad_wkj;
          }
       } // for (int j = 0; j < hiddenLayerNumNodes; j++)
