@@ -2,7 +2,7 @@ import java.io.*;
 
 /**
  * @author Aditya Ramanathan
- * @date February 27, 2025
+ * @date February 27, 2026
  * This class represents a simple feedforward neural network with an A–B–C architecture, 
  * consisting of an input layer with A neurons, one hidden layer with B neurons, and an
  * output layer with C neurons. There is functionality to simply just run the network on a 

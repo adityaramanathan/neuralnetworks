@@ -1,6 +1,6 @@
 /**
  * @author Aditya Ramanathan
- * @date February 3, 2025
+ * @date February 3, 2026
  * This class represents a simple feedforward neural network with an A–B–1 architecture, 
  * consisting of an input layer with A neurons, one hidden layer with B neurons, and a 
  * single output neuron. There is functionality to simply just run the network on a set
