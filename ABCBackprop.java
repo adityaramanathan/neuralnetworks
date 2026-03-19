@@ -193,7 +193,7 @@ public class ABCBackprop
       } // try (DataInputStream in = new DataInputStream(new BufferedInputStream(new FileInputStream(inputFileName))))
       catch (IOException e)
       {
-         System.out.println("Error reading file.");
+         System.out.println("Input table binary file not formatted as expected.");
          e.printStackTrace();
       } // catch (IOException e)
    } // public static void loadInputTable()
@@ -247,7 +247,7 @@ public class ABCBackprop
       } // try (BufferedReader br = new BufferedReader(new FileReader(truthFileName)))
       catch (IOException e)
       {
-         System.out.println("Error reading file.");
+         System.out.println("Truth table file not formatted as expected.");
          e.printStackTrace();
       } // catch (IOException e)
    } // public static void loadTruthTable()
@@ -268,10 +268,11 @@ public class ABCBackprop
 /**
  * Always outputs ALL the relevant user specified information PRIOR to training or running.
  * This includes the network configuration given the number of activations in the network 
- * layers, what will be printed (input table, truth table, etc...), from where the weights 
- * are being taken, etc... If the network is training, it will output the random number 
- * range, the maximum number of iterations, the error threshold, and the value of the 
- * learning rate, lambda.
+ * layers, the name of the file containing the input table, what will be printed (input 
+ * table, truth table, etc...), from where the weights are being taken, etc... If the network 
+ * is training, it will output the name of the file containing the truth table, the random 
+ * number range, the maximum number of iterations for training, the error threshold, and the 
+ * value of the learning rate, lambda.
  */
    public static void echoConfigurationParams()
    {
@@ -417,13 +418,13 @@ public class ABCBackprop
       }
       else
       {
-         throw new IllegalArgumentException("The configuration for populating weights is incorrect.");
+         throw new IllegalArgumentException("The configuration for populating weights is invalid.");
       }
    } // public static void populateWeights() throws IOException
 
 /**
- * Saves the weights to the given file name if training saving the weights is desired based
- * on the configuration of the network.
+ * Saves the weights to the file (provided in the network's configuration) if the saving the 
+ * weights is desired (also provided in the network's configuration).
  */
    public static void saveWeights() throws IOException
    {
@@ -453,7 +454,7 @@ public class ABCBackprop
    } // public void saveWeights() throws IOException
 
 /**
- * Populates the input table, the truth table if training the network, and the specifies
+ * Populates the input table, the truth table if training the network, and populates
  * initial values for the weights within the network.
  */
    public static void populateArrays() throws IOException

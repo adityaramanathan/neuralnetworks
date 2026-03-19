@@ -7,7 +7,7 @@ true;    // whether the network is training or network
 true;    // whether the input table should be printed
 true;    // whether the truth table should be printed
 false;    // whether the final weights should be saved to a file
-Load;  // "Random" => randomly generated weights, "Load" => load weights from a file, "Manual" => manually enter weights
+Random;  // "Random" => randomly generated weights, "Load" => load weights from a file, "Manual" => manually enter weights
 weights.bin;      // the name of the file to load from if that is desired
 weights.bin;      // the name of the file to save the weights if that is desired
 0.1;     // the lower bound for the random number generation
