@@ -1,0 +1,19 @@
+2;       // number of nodes in the input activation layer
+5;       // number of nodes in the hidden activation layer
+3;       // number of nodes in the output activation layer
+input.bin;        // input table file name
+truth.txt;        // truth table file name
+true;    // whether the network is training or network
+true;    // whether the input table should be printed
+true;    // whether the truth table should be printed
+false;    // whether the final weights should be saved to a file
+Load;  // "Random" => randomly generated weights, "Load" => load weights from a file, "Manual" => manually enter weights
+weights.bin;      // the name of the file to load from if that is desired
+weights.bin;      // the name of the file to save the weights if that is desired
+0.1;     // the lower bound for the random number generation
+1.5;     // the upper bound for the random number generation
+100000;  // the maximum number of iterations for training
+0.0002;  // the upper error bound to stop training
+0.3;     // the value of lambda
+4;       // the number of test numTestCases
+Sigmoid; // the type of activation function 
