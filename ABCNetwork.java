@@ -505,11 +505,11 @@ public class ABCNetwork
             omega_j += psiI[i] * weightsJI[j][i];
          }
 
-         double psiJ_j = omega_j * fPrimeActivation(thetaJ[j]);
+         double psi_j = omega_j * fPrimeActivation(thetaJ[j]);
 
          for (int k = 0; k < numInputNodes; k++)
          {
-            double grad_wkj = -inputActivations[k] * psiJ_j;
+            double grad_wkj = -inputActivations[k] * psi_j;
             deltaWKJ[k][j] = -lambda * grad_wkj;
          }
       } // for (int j = 0; j < hiddenLayerNumNodes; j++)
