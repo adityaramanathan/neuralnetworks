@@ -279,8 +279,18 @@ public class ABCBackprop
       System.out.println("Network Configuration: " + numInputNodes + "-" + hiddenLayerNumNodes + "-" + numOutputNodes);
       System.out.println("Input table loaded from " + inputFileName);
 
+      if (showInputTable)
+      {
+         System.out.println("The input table will be printed");
+      }
+
       if (isTraining)
       {
+         if (showTruthTable)
+         {
+            System.out.println("The truth table will be printed");
+         }
+         
          System.out.println("Truth table loaded from " + truthFileName);
          System.out.println("The network will train first and then run");
          System.out.println("Random Weights Range: (" + randomLowBound + ", " + randomHighBound + ")");
@@ -288,16 +298,6 @@ public class ABCBackprop
          System.out.println("Maximum Number of Iterations: " + maximumIter);
          System.out.println("Error Threshold: " + idealErr);
       } // if (isTraining)
-
-      if (showInputTable)
-      {
-         System.out.println("The input table will be printed");
-      }
-
-      if (showTruthTable)
-      {
-         System.out.println("The truth table will be printed");
-      }
 
       if (saveFinalWeights)
       {
@@ -321,7 +321,6 @@ public class ABCBackprop
    public static void allocateMem()
    {
       inputTable = new double[numTestCases][numInputNodes];
-      truthTable = new double[numTestCases][numOutputNodes];
       inputActivations = new double[numInputNodes];
       hiddenActivations = new double[hiddenLayerNumNodes];
       outputActivations = new double[numOutputNodes];
@@ -331,6 +330,7 @@ public class ABCBackprop
 
       if (isTraining)
       {
+         truthTable = new double[numTestCases][numOutputNodes];
          thetaJ = new double[hiddenLayerNumNodes];
          psiI = new double[numOutputNodes];
       }
