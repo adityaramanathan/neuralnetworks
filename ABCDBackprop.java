@@ -27,7 +27,7 @@ public class ABCDBackprop
    private static boolean showInputTable;    // flag for showing the input table at the end of running
    private static boolean showTruthTable;    // flag for showing the truth table at the end of running
    private static boolean saveFinalWeights;  // flag for whether weights should be saved at the end of running
-   private static String getWeights;         // "Random" or "Load" or "Manual"
+   private static String getWeights;         // "Random" or "Load"
    private static String loadFileName;       // name of the file to load weights
    private static String saveFileName;       // name of the file to save weights
    private static double randomLowBound;     // random number generator low bound
@@ -41,20 +41,14 @@ public class ABCDBackprop
 /**
  * Defining the arrays required within the network.
  */
-   private static double[][] inputTable;
-   private static double[][] truthTable;
-   private static double[] inputActivations;
-   private static double[][] hiddenActivations;
-   private static double[] outputActivations;
-   private static double[] targetOutputs;
-   private static double[][] weightsMK;
-   private static double[][] weightsKJ;
-   private static double[][] weightsJI;
-   private static double[] thetaK;
-   private static double[] thetaJ;
-   private static double[] psiJ;
-   private static double[] psiI;
-   private static double[][] outputActivationsRun;
+   private static double[][] inputTable;           // the input table for the network to train or run
+   private static double[][] truthTable;           // the truth table for the network to train
+   private static double[] targetOutputs;          // the target output activations for a specific training case
+   private static double[][] a;                    // the activations for all layers in the network
+   private static double[][][] w;                  // the weights for all layers in the network
+   private static double[][] theta;                // the theta values for the network
+   private static double[][] psi;                  // the psi values for the network
+   private static double[][] outputActivationsRun; // the output activations for all test cases when running the network
 
 /**
  * Defining the constants required within the network.
@@ -66,6 +60,12 @@ public class ABCDBackprop
    private static long startTime;
    private static long endTime;
 
+   private static final String DEFAULT_CONFIG_FILE_NAME = "config.txt";
+   private static final int INPUT_LAYER = 0;
+   private static final int HIDDEN_LAYER_K = 1;
+   private static final int HIDDEN_LAYER_J = 2;
+   private static final int OUTPUT_LAYER = 3;
+
 /**
  * Defines all the configuration parameters for the network.
  */
@@ -74,7 +74,7 @@ public class ABCDBackprop
       numActivationLayers = 4;
       numInputNodes = 2;
       numHiddenKNodes = 5;
-      numHiddenJNodes = 20;
+      numHiddenJNodes = 10;
       numOutputNodes = 3;
       inputFileName = "input.txt";
       truthFileName = "truth.txt";
@@ -172,7 +172,6 @@ public class ABCDBackprop
       } // catch (IOException | NumberFormatException e)
    } // public static void loadConfigParams(String filename)
 
-
 /**
  * Populates the input table for the network to train or run. 
  */
@@ -266,26 +265,13 @@ public class ABCDBackprop
    } // public static void loadTruthTable()
 
 /**
- * Sets the weights for the network to specific manually entered values.
- */
-   public static void setManualWeights()
-   {
-      weightsKJ[0][0] = 0.5;
-      weightsKJ[1][0] = 0.5;
-      weightsKJ[0][1] = 0.5;
-      weightsKJ[1][1] = 0.5;
-      weightsJI[0][0] = 0.5;
-      weightsJI[1][0] = 0.5;
-   } // public static void setManualWeights()
-
-/**
- * Always outputs ALL the relevant user specified information PRIOR to training or running.
+ * Always outputs all the relevant user specified information prior to training or running.
  * This includes the network configuration given the number of activations in the network 
- * layers, the name of the file containing the input table, what will be printed (input 
- * table, truth table, etc...), from where the weights are being taken, etc... If the network 
- * is training, it will output the name of the file containing the truth table, the random 
- * number range, the maximum number of iterations for training, the error threshold, and the 
- * value of the learning rate, lambda.
+ * layers, the name of the file containing the input table/truth table, what will be printed 
+ * (input table, truth table, etc...), from where the weights are being taken, etc... If the 
+ * network is training, it will output the name of the file containing the truth table, the 
+ * random number range, the maximum number of iterations for training, the error threshold, 
+ * and the value of the learning rate, lambda.
  */
    public static void echoConfigurationParams()
    {
@@ -336,24 +322,43 @@ public class ABCDBackprop
    public static void allocateMem()
    {
       inputTable = new double[numTestCases][numInputNodes];
-      inputActivations = new double[numInputNodes];
-      hiddenActivations = new double[numActivationLayers][];
-      hiddenActivations[1] = new double[numHiddenKNodes];
-      hiddenActivations[2] = new double[numHiddenJNodes];
-      outputActivations = new double[numOutputNodes];
       targetOutputs = new double[numOutputNodes];
-      weightsMK = new double[numInputNodes][numHiddenKNodes];
-      weightsKJ = new double[numHiddenKNodes][numHiddenJNodes];
-      weightsJI = new double[numHiddenJNodes][numOutputNodes];
+
+      a = new double[numActivationLayers][];
+      w = new double[numActivationLayers][][];
+      
+      int n = INPUT_LAYER;
+      a[n] = new double[numInputNodes];
+      
+      n = HIDDEN_LAYER_K;
+      a[n] = new double[numHiddenKNodes];
+      w[n] = new double[numInputNodes][numHiddenKNodes];
+
+      n = HIDDEN_LAYER_J;
+      a[n] = new double[numHiddenJNodes];
+      w[n] = new double[numHiddenKNodes][numHiddenJNodes];
+
+      n = OUTPUT_LAYER;
+      a[n] = new double[numOutputNodes];
+      w[n] = new double[numHiddenJNodes][numOutputNodes];
 
       if (isTraining)
       {
          truthTable = new double[numTestCases][numOutputNodes];
-         thetaK = new double[numHiddenKNodes];
-         thetaJ = new double[numHiddenJNodes];
-         psiJ = new double[numHiddenJNodes];
-         psiI = new double[numOutputNodes];
-      }
+
+         theta = new double[numActivationLayers - 1][];
+         psi = new double[numActivationLayers][];
+
+         n = HIDDEN_LAYER_K;
+         theta[n] = new double[numHiddenKNodes];
+
+         n = HIDDEN_LAYER_J;
+         theta[n] = new double[numHiddenJNodes];
+         psi[n] = new double[numHiddenJNodes];
+
+         n = OUTPUT_LAYER;
+         psi[n] = new double[numOutputNodes];
+      } // if (isTraining)
 
       outputActivationsRun = new double[numTestCases][numOutputNodes];
    } // public static void allocateMem()
@@ -364,27 +369,30 @@ public class ABCDBackprop
  */
    public static void randomlyGenerateWeights()
    {
+      int n = HIDDEN_LAYER_K;
       for (int m = 0; m < numInputNodes; m++)
       {
          for (int k = 0; k < numHiddenKNodes; k++)
          {
-            weightsMK[m][k] = randomize(randomLowBound, randomHighBound);
+            w[n][m][k] = randomize(randomLowBound, randomHighBound);
          }
       }
 
+      n = HIDDEN_LAYER_J;
       for (int k = 0; k < numHiddenKNodes; k++)
       {
          for (int j = 0; j < numHiddenJNodes; j++)
          {
-            weightsKJ[k][j] = randomize(randomLowBound, randomHighBound);
+            w[n][k][j] = randomize(randomLowBound, randomHighBound);
          }
       }
 
+      n = OUTPUT_LAYER;
       for (int j = 0; j < numHiddenJNodes; j++)
       {
          for (int i = 0; i < numOutputNodes; i++)
          {
-            weightsJI[j][i] = randomize(randomLowBound, randomHighBound);
+            w[n][j][i] = randomize(randomLowBound, randomHighBound);
          }
       }
    } // public static void randomlyGenerateWeights()
@@ -408,27 +416,30 @@ public class ABCDBackprop
                                                           numInputNodes, numHiddenKNodes, numHiddenJNodes, numOutputNodes));
       }
 
+      int n = HIDDEN_LAYER_K;
       for (int m = 0; m < numInputNodes; m++)
       {
          for (int k = 0; k < numHiddenKNodes; k++)
          {
-            weightsMK[m][k] = in.readDouble();
+            w[n][m][k] = in.readDouble();
          }
       }
 
+      n = HIDDEN_LAYER_J;
       for (int k = 0; k < numHiddenKNodes; k++)
       {
          for (int j = 0; j < numHiddenJNodes; j++)
          {
-            weightsKJ[k][j] = in.readDouble();
+            w[n][k][j] = in.readDouble();
          }
       }
 
+      n = OUTPUT_LAYER;
       for (int j = 0; j < numHiddenJNodes; j++)
       {
          for (int i = 0; i < numOutputNodes; i++)
          {
-            weightsJI[j][i] = in.readDouble();
+            w[n][j][i] = in.readDouble();
          }
       }
 
@@ -449,10 +460,6 @@ public class ABCDBackprop
       {
          loadWeights();
       }
-      else if (getWeights.equalsIgnoreCase("manual"))
-      {
-         setManualWeights();
-      }
       else
       {
          throw new IllegalArgumentException("The configuration for populating weights is invalid.");
@@ -472,27 +479,30 @@ public class ABCDBackprop
       out.writeInt(numHiddenJNodes);
       out.writeInt(numOutputNodes);
 
+      int n = HIDDEN_LAYER_K;
       for (int m = 0; m < numInputNodes; m++)
       {
          for (int k = 0; k < numHiddenKNodes; k++)
          {
-            out.writeDouble(weightsMK[m][k]);
+            out.writeDouble(w[n][m][k]);
          }
       }
 
+      n = HIDDEN_LAYER_J;
       for (int k = 0; k < numHiddenKNodes; k++)
       {
          for (int j = 0; j < numHiddenJNodes; j++)
          {
-            out.writeDouble(weightsKJ[k][j]);
+            out.writeDouble(w[n][k][j]);
          }
       }
 
+      n = OUTPUT_LAYER;
       for (int j = 0; j < numHiddenJNodes; j++)
       {
          for (int i = 0; i < numOutputNodes; i++)
          {
-            out.writeDouble(weightsJI[j][i]);
+            out.writeDouble(w[n][j][i]);
          }
       }
 
@@ -600,9 +610,10 @@ public class ABCDBackprop
  */
    public static void defineInputActivations(int testCase)
    {
+      int n = INPUT_LAYER;
       for (int m = 0; m < numInputNodes; m++)
       {
-         inputActivations[m] = inputTable[testCase][m];
+         a[n][m] = inputTable[testCase][m];
       }
    }
 
@@ -612,37 +623,40 @@ public class ABCDBackprop
  */
    public static void runForRunning()
    {
+      int n = HIDDEN_LAYER_K;
       for (int k = 0; k < numHiddenKNodes; k++)
       {
          double theta_k = 0.0;
          for (int m = 0; m < numInputNodes; m++)
          {
-            theta_k += weightsMK[m][k] * inputActivations[m];
+            theta_k += w[n][m][k] * a[n - 1][m];
          }
 
-         hiddenActivations[1][k] = fActivation(theta_k);
+         a[n][k] = fActivation(theta_k);
       } // for (int k = 0; k < numHiddenKNodes; k++) 
 
+      n = HIDDEN_LAYER_J;
       for (int j = 0; j < numHiddenJNodes; j++)
       {
          double theta_j = 0.0;
          for (int k = 0; k < numHiddenKNodes; k++)
          {
-            theta_j += weightsKJ[k][j] * hiddenActivations[1][k];
+            theta_j += w[n][k][j] * a[n - 1][k];
          }
 
-         hiddenActivations[2][j] = fActivation(theta_j);
+         a[n][j] = fActivation(theta_j);
       } // for (int j = 0; j < numHiddenJNodes; j++)
 
+      n = OUTPUT_LAYER;
       for (int i = 0; i < numOutputNodes; i++)
       {
          double theta_i = 0.0;
          for (int j = 0; j < numHiddenJNodes; j++)
          {
-            theta_i += weightsJI[j][i] * hiddenActivations[2][j];
+            theta_i += w[n][j][i] * a[n - 1][j];
          }
 
-         outputActivations[i] = fActivation(theta_i);
+         a[n][i] = fActivation(theta_i);
       } // for (int i = 0; i < numOutputNodes; i++)
    } // public static void runForRunning()
 
@@ -654,42 +668,46 @@ public class ABCDBackprop
  */
    public static double runForTraining()
    {
+      int n = HIDDEN_LAYER_K;
       for (int k = 0; k < numHiddenKNodes; k++)
       {
          double theta_k = 0.0;
          for (int m = 0; m < numInputNodes; m++)
          {
-            theta_k += weightsMK[m][k] * inputActivations[m];
+            theta_k += w[n][m][k] * a[n - 1][m];
          }
 
-         thetaK[k] = theta_k;
-         hiddenActivations[1][k] = fActivation(thetaK[k]);
+         theta[n][k] = theta_k;
+         a[n][k] = fActivation(theta[n][k]);
       } // for (int k = 0; k < numHiddenKNodes; k++)
 
+      n = HIDDEN_LAYER_J;
       for (int j = 0; j < numHiddenJNodes; j++)
       {
          double theta_j = 0.0;
          for (int k = 0; k < numHiddenKNodes; k++)
          {
-            theta_j += weightsKJ[k][j] * hiddenActivations[1][k];
+            theta_j += w[n][k][j] * a[n - 1][k];
          }
 
-         thetaJ[j] = theta_j;
-         hiddenActivations[2][j] = fActivation(thetaJ[j]);
+         theta[n][j] = theta_j;
+         a[n][j] = fActivation(theta[n][j]);
       } // for (int j = 0; j < numHiddenJNodes; j++)
 
       double twiceError = 0.0;
+
+      n = OUTPUT_LAYER;
       for (int i = 0; i < numOutputNodes; i++)
       {
          double theta_i = 0.0;
          for (int j = 0; j < numHiddenJNodes; j++)
          {
-            theta_i += weightsJI[j][i] * hiddenActivations[2][j];
+            theta_i += w[n][j][i] * a[n - 1][j];
          }
 
-         outputActivations[i] = fActivation(theta_i);
-         double omega_i = targetOutputs[i] - outputActivations[i];
-         psiI[i] = omega_i * fPrimeActivation(theta_i);
+         a[n][i] = fActivation(theta_i);
+         double omega_i = targetOutputs[i] - a[n][i];
+         psi[n][i] = omega_i * fPrimeActivation(theta_i);
          twiceError += omega_i * omega_i;
       } // for (int i = 0; i < numOutputNodes; i++)
       
@@ -701,34 +719,36 @@ public class ABCDBackprop
  */
    public static void train()
    {
+      int n = HIDDEN_LAYER_J;
       for (int j = 0; j < numHiddenJNodes; j++)
       {
          double omega_j = 0.0;
 
          for (int i = 0; i < numOutputNodes; i++)
          {
-            omega_j += psiI[i] * weightsJI[j][i];
-            weightsJI[j][i] += lambda * hiddenActivations[2][j] * psiI[i];
+            omega_j += psi[n + 1][i] * w[n + 1][j][i];
+            w[n + 1][j][i] += lambda * a[n][j] * psi[n + 1][i];
          }
 
-        psiJ[j] = omega_j * fPrimeActivation(thetaJ[j]);
+        psi[n][j] = omega_j * fPrimeActivation(theta[n][j]);
       } // for (int j = 0; j < numHiddenJNodes; j++)
 
+      n = HIDDEN_LAYER_K;
       for (int k = 0; k < numHiddenKNodes; k++)
       {
          double omega_k = 0.0;
 
          for (int j = 0; j < numHiddenJNodes; j++)
          {
-            omega_k += psiJ[j] * weightsKJ[k][j];
-            weightsKJ[k][j] += lambda * hiddenActivations[1][k] * psiJ[j];
+            omega_k += psi[n + 1][j] * w[n + 1][k][j];
+            w[n + 1][k][j] += lambda * a[n][k] * psi[n + 1][j];
          }
 
-         double psi_k = omega_k * fPrimeActivation(thetaK[k]);
+         double psi_k = omega_k * fPrimeActivation(theta[n][k]);
 
          for (int m = 0; m < numInputNodes; m++)
          {
-            weightsMK[m][k] += lambda * inputActivations[m] * psi_k;
+            w[n][m][k] += lambda * a[n - 1][m] * psi_k;
          }
       } // for (int k = 0; k < numHiddenKNodes; k++)
    } // public static void train()
@@ -750,7 +770,7 @@ public class ABCDBackprop
       }
 
       System.out.println("The number of iterations was " + numIter + ".");
-      System.out.println("The average error reached was " + averageError + ".");
+      System.out.printf("The average error reached was %.4f.\n", averageError);
    } // public static void printTrainingExitInfo()
 
 /**
@@ -792,9 +812,10 @@ public class ABCDBackprop
          defineInputActivations(t);
          runForRunning();
 
+         int n = OUTPUT_LAYER;
          for (int i = 0; i < numOutputNodes; i++)
          {
-            outputActivationsRun[t][i] = outputActivations[i];
+            outputActivationsRun[t][i] = a[n][i];
          }
       } // for (int t = 0; t < numTestCases; t++)
    } // public static void runNetwork()
@@ -860,7 +881,16 @@ public class ABCDBackprop
  */
    public static void main(String[] args) throws IOException
    {
-      String configFileName = "config.txt";
+      String configFileName;
+      if (args.length == 0)
+      {
+         configFileName = DEFAULT_CONFIG_FILE_NAME;
+      }
+      else
+      {
+         configFileName = args[0];
+      }
+
       System.out.println("Configuration File Name: " + configFileName);
 
       loadConfigParams(configFileName);

@@ -3,11 +3,15 @@ import java.util.*;
 
 /**
  * @author Aditya Ramanathan
- * @version 3/17/26
+ * @version 4/12/26
  * Converts a .txt file to a binary file.
  */
 public class BinaryConverter 
 {
+
+   private static final String DEFAULT_INPUT_FILE_NAME = "input.txt";
+   private static final String DEFAULT_BIN_FILE_NAME = "input.bin";
+
    /**
     * Given a specific input file, converts the content and writes it to a binary output file.
     * @param inputFileName the name of the input .txt file
@@ -39,9 +43,27 @@ public class BinaryConverter
     */
    public static void main(String[] args) 
    {
+      String inputFileName;
+      String binFileName;
+      if (args.length == 0)
+      {
+         inputFileName = DEFAULT_INPUT_FILE_NAME;
+         binFileName = DEFAULT_BIN_FILE_NAME;
+      }
+      else if (args.length == 1)
+      {
+         inputFileName = args[0];
+         binFileName = DEFAULT_BIN_FILE_NAME;
+      }
+      else
+      {
+         inputFileName = args[0];
+         binFileName = args[1];
+      }
+
       try 
       {
-         convertToBinary("input.txt", "input.bin");
+         convertToBinary(inputFileName, binFileName);
       } 
       catch (IOException e) 
       {
