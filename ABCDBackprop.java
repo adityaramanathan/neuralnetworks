@@ -325,22 +325,22 @@ public class ABCDBackprop
       targetOutputs = new double[numOutputNodes];
 
       a = new double[numActivationLayers][];
-      w = new double[numActivationLayers][][];
+      w = new double[numActivationLayers - 1][][];
       
       int n = INPUT_LAYER;
       a[n] = new double[numInputNodes];
-      
+      w[n] = new double[numInputNodes][numHiddenKNodes];
+
       n = HIDDEN_LAYER_K;
       a[n] = new double[numHiddenKNodes];
-      w[n] = new double[numInputNodes][numHiddenKNodes];
+      w[n] = new double[numHiddenKNodes][numHiddenJNodes];
 
       n = HIDDEN_LAYER_J;
       a[n] = new double[numHiddenJNodes];
-      w[n] = new double[numHiddenKNodes][numHiddenJNodes];
+      w[n] = new double[numHiddenJNodes][numOutputNodes];
 
       n = OUTPUT_LAYER;
       a[n] = new double[numOutputNodes];
-      w[n] = new double[numHiddenJNodes][numOutputNodes];
 
       if (isTraining)
       {
@@ -369,7 +369,7 @@ public class ABCDBackprop
  */
    public static void randomlyGenerateWeights()
    {
-      int n = HIDDEN_LAYER_K;
+      int n = INPUT_LAYER;
       for (int m = 0; m < numInputNodes; m++)
       {
          for (int k = 0; k < numHiddenKNodes; k++)
@@ -378,7 +378,7 @@ public class ABCDBackprop
          }
       }
 
-      n = HIDDEN_LAYER_J;
+      n = HIDDEN_LAYER_K;
       for (int k = 0; k < numHiddenKNodes; k++)
       {
          for (int j = 0; j < numHiddenJNodes; j++)
@@ -387,7 +387,7 @@ public class ABCDBackprop
          }
       }
 
-      n = OUTPUT_LAYER;
+      n = HIDDEN_LAYER_J;
       for (int j = 0; j < numHiddenJNodes; j++)
       {
          for (int i = 0; i < numOutputNodes; i++)
@@ -416,7 +416,7 @@ public class ABCDBackprop
                                                           numInputNodes, numHiddenKNodes, numHiddenJNodes, numOutputNodes));
       }
 
-      int n = HIDDEN_LAYER_K;
+      int n = INPUT_LAYER;
       for (int m = 0; m < numInputNodes; m++)
       {
          for (int k = 0; k < numHiddenKNodes; k++)
@@ -425,7 +425,7 @@ public class ABCDBackprop
          }
       }
 
-      n = HIDDEN_LAYER_J;
+      n = HIDDEN_LAYER_K;
       for (int k = 0; k < numHiddenKNodes; k++)
       {
          for (int j = 0; j < numHiddenJNodes; j++)
@@ -434,7 +434,7 @@ public class ABCDBackprop
          }
       }
 
-      n = OUTPUT_LAYER;
+      n = HIDDEN_LAYER_J;
       for (int j = 0; j < numHiddenJNodes; j++)
       {
          for (int i = 0; i < numOutputNodes; i++)
@@ -479,7 +479,7 @@ public class ABCDBackprop
       out.writeInt(numHiddenJNodes);
       out.writeInt(numOutputNodes);
 
-      int n = HIDDEN_LAYER_K;
+      int n = INPUT_LAYER;
       for (int m = 0; m < numInputNodes; m++)
       {
          for (int k = 0; k < numHiddenKNodes; k++)
@@ -488,7 +488,7 @@ public class ABCDBackprop
          }
       }
 
-      n = HIDDEN_LAYER_J;
+      n = HIDDEN_LAYER_K;
       for (int k = 0; k < numHiddenKNodes; k++)
       {
          for (int j = 0; j < numHiddenJNodes; j++)
@@ -497,7 +497,7 @@ public class ABCDBackprop
          }
       }
 
-      n = OUTPUT_LAYER;
+      n = HIDDEN_LAYER_J;
       for (int j = 0; j < numHiddenJNodes; j++)
       {
          for (int i = 0; i < numOutputNodes; i++)
@@ -629,7 +629,7 @@ public class ABCDBackprop
          double theta_k = 0.0;
          for (int m = 0; m < numInputNodes; m++)
          {
-            theta_k += w[n][m][k] * a[n - 1][m];
+            theta_k += w[n - 1][m][k] * a[n - 1][m];
          }
 
          a[n][k] = fActivation(theta_k);
@@ -641,7 +641,7 @@ public class ABCDBackprop
          double theta_j = 0.0;
          for (int k = 0; k < numHiddenKNodes; k++)
          {
-            theta_j += w[n][k][j] * a[n - 1][k];
+            theta_j += w[n - 1][k][j] * a[n - 1][k];
          }
 
          a[n][j] = fActivation(theta_j);
@@ -653,7 +653,7 @@ public class ABCDBackprop
          double theta_i = 0.0;
          for (int j = 0; j < numHiddenJNodes; j++)
          {
-            theta_i += w[n][j][i] * a[n - 1][j];
+            theta_i += w[n - 1][j][i] * a[n - 1][j];
          }
 
          a[n][i] = fActivation(theta_i);
@@ -674,7 +674,7 @@ public class ABCDBackprop
          double theta_k = 0.0;
          for (int m = 0; m < numInputNodes; m++)
          {
-            theta_k += w[n][m][k] * a[n - 1][m];
+            theta_k += w[n - 1][m][k] * a[n - 1][m];
          }
 
          theta[n][k] = theta_k;
@@ -687,7 +687,7 @@ public class ABCDBackprop
          double theta_j = 0.0;
          for (int k = 0; k < numHiddenKNodes; k++)
          {
-            theta_j += w[n][k][j] * a[n - 1][k];
+            theta_j += w[n - 1][k][j] * a[n - 1][k];
          }
 
          theta[n][j] = theta_j;
@@ -702,7 +702,7 @@ public class ABCDBackprop
          double theta_i = 0.0;
          for (int j = 0; j < numHiddenJNodes; j++)
          {
-            theta_i += w[n][j][i] * a[n - 1][j];
+            theta_i += w[n - 1][j][i] * a[n - 1][j];
          }
 
          a[n][i] = fActivation(theta_i);
@@ -726,8 +726,8 @@ public class ABCDBackprop
 
          for (int i = 0; i < numOutputNodes; i++)
          {
-            omega_j += psi[n + 1][i] * w[n + 1][j][i];
-            w[n + 1][j][i] += lambda * a[n][j] * psi[n + 1][i];
+            omega_j += psi[n + 1][i] * w[n][j][i];
+            w[n][j][i] += lambda * a[n][j] * psi[n + 1][i];
          }
 
         psi[n][j] = omega_j * fPrimeActivation(theta[n][j]);
@@ -740,15 +740,15 @@ public class ABCDBackprop
 
          for (int j = 0; j < numHiddenJNodes; j++)
          {
-            omega_k += psi[n + 1][j] * w[n + 1][k][j];
-            w[n + 1][k][j] += lambda * a[n][k] * psi[n + 1][j];
+            omega_k += psi[n + 1][j] * w[n][k][j];
+            w[n][k][j] += lambda * a[n][k] * psi[n + 1][j];
          }
 
          double psi_k = omega_k * fPrimeActivation(theta[n][k]);
 
          for (int m = 0; m < numInputNodes; m++)
          {
-            w[n][m][k] += lambda * a[n - 1][m] * psi_k;
+            w[n - 1][m][k] += lambda * a[n - 1][m] * psi_k;
          }
       } // for (int k = 0; k < numHiddenKNodes; k++)
    } // public static void train()
