@@ -14,5 +14,6 @@ weights.bin;      // the name of the file to save the weights if that is desired
 100000;  // the maximum number of iterations for training
 0.0002;  // the upper error bound to stop training
 0.3;     // the value of lambda
+10000;       // the value of the keepAlive, the number of iterations between messages, set to 0 for no output
 4;       // the number of test numTestCases
 Sigmoid; // the type of activation function

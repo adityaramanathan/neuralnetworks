@@ -61,6 +61,7 @@ public class NLayerNetwork
    private static int maximumIter;           // maximum number of iterations
    private static double idealErr;           // stop iterating after reaching this error value
    private static double lambda;             // learning factor
+   private static int keepAlive;             // the number of iterations between messages, no output if it is 0
    private static int numTestCases;          // number of test cases
    private static String activationFunc;     // the activation function that is to be used
 
@@ -160,6 +161,9 @@ public class NLayerNetwork
 
          line = br.readLine();
          lambda = Double.parseDouble(line.substring(0, line.indexOf(';')).trim());
+
+         line = br.readLine();
+         keepAlive = Integer.parseInt(line.substring(0, line.indexOf(';')).trim());
 
          line = br.readLine();
          numTestCases = Integer.parseInt(line.substring(0, line.indexOf(';')).trim());
@@ -701,6 +705,11 @@ public class NLayerNetwork
          numIter++;
          maxIterationsComplete = numIter >= maximumIter;
          errorThresholdReached = averageError < idealErr;
+
+         if ((keepAlive != 0) && ((numIter % keepAlive) == 0)) 
+         {
+            System.out.printf("Iteration %d, Error = %f\n", numIter, averageError);
+         }
       } // while (!maxIterationsComplete && !errorThresholdReached)
    } // public static void trainNetwork()
 
