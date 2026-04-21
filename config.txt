@@ -1,5 +1,5 @@
-3;                // num connectivity layers
-2 100 5 3;         // network configuration
+6;                // num connectivity layers
+2 5 10 20 40 80 3;         // network configuration
 input.bin;        // input table file name
 truth3Output.txt;        // truth table file name
 true;    // whether the network is training or not
@@ -15,4 +15,4 @@ weights.bin;      // the name of the file to save the weights if that is desired
 0.0002;  // the upper error bound to stop training
 0.3;     // the value of lambda
 4;       // the number of test numTestCases
-Sigmoid; // the type of activation function 
+Sigmoid; // the type of activation function

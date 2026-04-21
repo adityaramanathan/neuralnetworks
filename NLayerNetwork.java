@@ -1,29 +1,52 @@
 import java.io.*;
 
 /**
- * READ: This is the same code as ABCD Backprop currently. I've pushed to Github so I can
- * track the changes I'm making to NLayer and make sure I don't make errors.
- */
-
-/**
  * @author Aditya Ramanathan
  * @date April 17, 2026
- * This class represents a simple feedforward N-layer neural network. There is functionality 
- * to simply just run the network on a set of test cases or both train and then run the 
- * network. The training method used to minimize the error function in this network is 
- * gradient descent with backpropagation.
+ * This class represents a simple feedforward neural network that allows for any number
+ * of layers with any number of nodes in each layer. There is functionality to simply
+ * just run the network on a set of test cases. There is also functionality to both train
+ * the network on a set of test cases and then run the network on a set of test cases. 
+ * The training method used to minimize the error function in this network is gradient 
+ * descent with backpropagation.
+ * 
+ * Table of Contents:
+ * public static void loadConfigParams(String filename)
+ * public static void loadInputTable()
+ * public static void loadTruthTable()
+ * public static void setDerivedQuantities()
+ * public static void echoConfigurationParams()
+ * public static void allocateMem()
+ * public static void randomlyGenerateWeights()
+ * public static void loadWeights() throws IOException
+ * public static void populateWeights() throws IOException
+ * public static void saveWeights() throws IOException
+ * public static void populateArrays() throws IOException
+ * public static double randomize(double low, double high)
+ * public static double fActivation(double theta)
+ * public static double fPrimeActivation(double theta)
+ * public static double sigmoid(double x)
+ * public static double sigmoidPrime(double x)
+ * public static double hyperbolicTangent(double x)
+ * public static double hyperbolicTangentPrime(double x)
+ * public static void defineInputActivations(int testCase)
+ * public static void runForRunning()
+ * public static double runForTraining()
+ * public static void train()
+ * public static void printTrainingExitInfo()
+ * public static void trainNetwork()
+ * public static void runNetwork()
+ * public static void printRunningResults()
+ * public static void main(String[] args) throws IOException
  */
-public class NLayer
+public class NLayerNetwork
 {
 
 /**
  * Defining the network configuration parameters.
  */
    private static int numActivationLayers;   // number of activation layers in the network
-   private static int numInputNodes;         // number of input activations
-   private static int numHiddenKNodes;       // number of activations in hidden layer K
-   private static int numHiddenJNodes;       // number of activations in hidden layer J
-   private static int numOutputNodes;        // number of output activations
+   private static int[] nLayers;             // number of nodes in each layer
    private static String inputFileName;      // name of the file containing the input table
    private static String truthFileName;      // name of the file containing the output table
    private static boolean isTraining;        // flag to show whether network should be trained
@@ -62,40 +85,14 @@ public class NLayer
    private static boolean errorThresholdReached;
    private static long startTime;
    private static long endTime;
+   private static int outputLayerIndex;
+   private static int lastHiddenLayerIndex;
 
    private static final String DEFAULT_CONFIG_FILE_NAME = "config.txt";
-   private static final int INPUT_LAYER = 0;
-   private static final int FIRST_HIDDEN_LAYER = 1;
-   private static final int SECOND_HIDDEN_LAYER = 2;
-   private static final int OUTPUT_LAYER = 3; // eventually need to delete this const.
+   private static final int INPUT_LAYER_INDEX = 0;
+   private static final int FIRST_HIDDEN_LAYER_INDEX = 1;
+   private static final int SECOND_HIDDEN_LAYER_INDEX = 2;
 
-/**
- * Defines all the configuration parameters for the network.
- */
-   public static void setConfigurationParams()
-   {
-      numActivationLayers = 4;
-      numInputNodes = 2;
-      numHiddenKNodes = 5;
-      numHiddenJNodes = 10;
-      numOutputNodes = 3;
-      inputFileName = "input.txt";
-      truthFileName = "truth.txt";
-      isTraining = true;
-      showInputTable = true;
-      showTruthTable = true;
-      saveFinalWeights = false;
-      getWeights = "Random";
-      loadFileName = "weights.bin";
-      saveFileName = "weights.bin";
-      randomLowBound = 0.1;
-      randomHighBound = 1.5;
-      maximumIter = 100000;
-      idealErr = 0.0002;
-      lambda = 0.3;
-      numTestCases = 4;
-      activationFunc = "Sigmoid";
-   } // public static void setConfigurationParams()
 
 /**
  * Defines all the configuration parameters for the network by loading them from a file.
@@ -115,10 +112,12 @@ public class NLayer
          String configurationString = line.substring(0, line.indexOf(';')).trim();
          String[] numNodesPerLayer = configurationString.split("\\s+");
 
-         numInputNodes = Integer.parseInt(numNodesPerLayer[0]);
-         numHiddenKNodes = Integer.parseInt(numNodesPerLayer[1]);
-         numHiddenJNodes = Integer.parseInt(numNodesPerLayer[2]);
-         numOutputNodes = Integer.parseInt(numNodesPerLayer[3]);
+         nLayers = new int[numActivationLayers];
+
+         for (int n = 0; n < numActivationLayers; n++)
+         {
+            nLayers[n] = Integer.parseInt(numNodesPerLayer[n]);
+         }
 
          line = br.readLine();
          inputFileName = line.substring(0, line.indexOf(';')).trim();
@@ -176,21 +175,6 @@ public class NLayer
    } // public static void loadConfigParams(String filename)
 
 /**
- * Populates the input table for the network to train or run. 
- */
-   public static void populateInputs()
-   {
-      inputTable[0][0] = 0.0;
-      inputTable[0][1] = 0.0;
-      inputTable[1][0] = 0.0;
-      inputTable[1][1] = 1.0;
-      inputTable[2][0] = 1.0;
-      inputTable[2][1] = 0.0;
-      inputTable[3][0] = 1.0;
-      inputTable[3][1] = 1.0;
-   } // public static void populateInputs()
-
-/**
  * Populates the input table for the network to train or run by reading a binary input 
  * file. The file name is provided in the network configuration. 
  */
@@ -198,9 +182,9 @@ public class NLayer
    {
       try (DataInputStream in = new DataInputStream(new BufferedInputStream(new FileInputStream(inputFileName))))
       {
-         for (int row = 0; row < numTestCases; row++) 
+         for (int row = 0; row < numTestCases; row++)
          {
-            for (int col = 0; col < numInputNodes; col++) 
+            for (int col = 0; col < nLayers[INPUT_LAYER_INDEX]; col++) 
             {
                inputTable[row][col] = in.readDouble();
             }
@@ -212,26 +196,6 @@ public class NLayer
          e.printStackTrace();
       } // catch (IOException e)
    } // public static void loadInputTable()
-
-/**
- * Populates the truth table for the network to train, if and only if training the network is 
- * desired based on the configuration of the network.
- */
-   public static void populateTruthTable()
-   {
-      truthTable[0][0] = 0.0;
-      truthTable[1][0] = 0.0;
-      truthTable[2][0] = 0.0;
-      truthTable[3][0] = 1.0;
-      truthTable[0][1] = 0.0;
-      truthTable[1][1] = 1.0;
-      truthTable[2][1] = 1.0;
-      truthTable[3][1] = 1.0;
-      truthTable[0][2] = 0.0;
-      truthTable[1][2] = 1.0;
-      truthTable[2][2] = 1.0;
-      truthTable[3][2] = 0.0;
-   } // public static void populateTruthTable()
 
 /**
  * Populates the truth table for the network to train, if and only if training the network is 
@@ -250,7 +214,7 @@ public class NLayer
             line = line.trim();
             String[] values = line.split(" ");
 
-            for (int col = 0; col < numOutputNodes; col++)
+            for (int col = 0; col < nLayers[outputLayerIndex]; col++)
             {
                truthTable[row][col] = Double.parseDouble(values[col]);
             }
@@ -268,8 +232,18 @@ public class NLayer
    } // public static void loadTruthTable()
 
 /**
+ * Computes the derived quantities needed for the network, specifically the index of the
+ * output layer and the index of the last hidden layer in the network. 
+ */
+   public static void setDerivedQuantities()
+   {
+      outputLayerIndex = numActivationLayers - 1;
+      lastHiddenLayerIndex = outputLayerIndex - 1;
+   }
+
+/**
  * Always outputs all the relevant user specified information prior to training or running.
- * This includes the network configuration given the number of activations in the network 
+ * This includes the network configuration given the number of nodes in the network 
  * layers, the name of the file containing the input table/truth table, what will be printed 
  * (input table, truth table, etc...), from where the weights are being taken, etc... If the 
  * network is training, it will output the name of the file containing the truth table, the 
@@ -278,8 +252,18 @@ public class NLayer
  */
    public static void echoConfigurationParams()
    {
-      System.out.println(String.format("Network Configuration: %d-%d-%d-%d", 
-                                       numInputNodes, numHiddenKNodes, numHiddenJNodes, numOutputNodes));
+      String networkConfig = "";
+      for (int n = 0; n < numActivationLayers; n++)
+      {
+         networkConfig += nLayers[n];
+
+         if (n != outputLayerIndex)
+         {
+            networkConfig += "-";
+         }
+      } // for (int n = 0; n < numActivationLayers; n++)
+
+      System.out.println("Network Configuration: " + networkConfig);
       System.out.println("Input table loaded from " + inputFileName);
 
       if (showInputTable)
@@ -324,46 +308,41 @@ public class NLayer
  */
    public static void allocateMem()
    {
-      inputTable = new double[numTestCases][numInputNodes];
-      targetOutputs = new double[numOutputNodes];
+      inputTable = new double[numTestCases][nLayers[INPUT_LAYER_INDEX]];
+      targetOutputs = new double[nLayers[outputLayerIndex]];
 
       a = new double[numActivationLayers][];
       w = new double[numActivationLayers - 1][][];
-      
-      int n = INPUT_LAYER;
-      a[n] = new double[numInputNodes];
-      w[n] = new double[numInputNodes][numHiddenKNodes];
 
-      n = FIRST_HIDDEN_LAYER;
-      a[n] = new double[numHiddenKNodes];
-      w[n] = new double[numHiddenKNodes][numHiddenJNodes];
+      for (int n = 0; n < numActivationLayers; n++)
+      {
+         a[n] = new double[nLayers[n]];
+      }
 
-      n = SECOND_HIDDEN_LAYER;
-      a[n] = new double[numHiddenJNodes];
-      w[n] = new double[numHiddenJNodes][numOutputNodes];
-
-      n = OUTPUT_LAYER;
-      a[n] = new double[numOutputNodes];
+      for (int n = 0; n < outputLayerIndex; n++)
+      {
+         w[n] = new double[nLayers[n]][nLayers[n + 1]];
+      }
 
       if (isTraining)
       {
-         truthTable = new double[numTestCases][numOutputNodes];
+         truthTable = new double[numTestCases][nLayers[outputLayerIndex]];
 
          theta = new double[numActivationLayers - 1][];
          psi = new double[numActivationLayers][];
 
-         n = FIRST_HIDDEN_LAYER;
-         theta[n] = new double[numHiddenKNodes];
+         for (int n = FIRST_HIDDEN_LAYER_INDEX; n < outputLayerIndex; n++)
+         {
+            theta[n] = new double[nLayers[n]];
+         }
 
-         n = SECOND_HIDDEN_LAYER;
-         theta[n] = new double[numHiddenJNodes];
-         psi[n] = new double[numHiddenJNodes];
-
-         n = OUTPUT_LAYER;
-         psi[n] = new double[numOutputNodes];
+         for (int n = SECOND_HIDDEN_LAYER_INDEX; n < numActivationLayers; n++)
+         {
+            psi[n] = new double[nLayers[n]];
+         }
       } // if (isTraining)
 
-      outputActivationsRun = new double[numTestCases][numOutputNodes];
+      outputActivationsRun = new double[numTestCases][nLayers[outputLayerIndex]];
    } // public static void allocateMem()
 
 /**
@@ -372,32 +351,16 @@ public class NLayer
  */
    public static void randomlyGenerateWeights()
    {
-      int n = INPUT_LAYER;
-      for (int m = 0; m < numInputNodes; m++)
+      for (int n = INPUT_LAYER_INDEX; n < outputLayerIndex; n++)
       {
-         for (int k = 0; k < numHiddenKNodes; k++)
+         for (int k = 0; k < nLayers[n]; k++)
          {
-            w[n][m][k] = randomize(randomLowBound, randomHighBound);
+            for (int j = 0; j < nLayers[n + 1]; j++)
+            {
+               w[n][k][j] = randomize(randomLowBound, randomHighBound);
+            }
          }
-      }
-
-      n = FIRST_HIDDEN_LAYER;
-      for (int k = 0; k < numHiddenKNodes; k++)
-      {
-         for (int j = 0; j < numHiddenJNodes; j++)
-         {
-            w[n][k][j] = randomize(randomLowBound, randomHighBound);
-         }
-      }
-
-      n = SECOND_HIDDEN_LAYER;
-      for (int j = 0; j < numHiddenJNodes; j++)
-      {
-         for (int i = 0; i < numOutputNodes; i++)
-         {
-            w[n][j][i] = randomize(randomLowBound, randomHighBound);
-         }
-      }
+      } // for (int n = INPUT_LAYER_INDEX; n < outputLayerIndex; n++)
    } // public static void randomlyGenerateWeights()
 
 /**
@@ -408,43 +371,26 @@ public class NLayer
    {
       DataInputStream in = new DataInputStream(new BufferedInputStream(new FileInputStream(loadFileName)));
 
-      int loadM = in.readInt();
-      int loadK = in.readInt();
-      int loadJ = in.readInt();
-      int loadI = in.readInt();
-
-      if (loadM != numInputNodes || loadK != numHiddenKNodes || loadJ != numHiddenJNodes || loadI != numOutputNodes)
+      for (int n = INPUT_LAYER_INDEX; n < numActivationLayers; n++)
       {
-         throw new IllegalArgumentException(String.format("Weight file configuration does not match network architecture of %d-%d-%d-%d",
-                                                          numInputNodes, numHiddenKNodes, numHiddenJNodes, numOutputNodes));
-      }
-
-      int n = INPUT_LAYER;
-      for (int m = 0; m < numInputNodes; m++)
-      {
-         for (int k = 0; k < numHiddenKNodes; k++)
+         int currLayerSize = in.readInt();
+         if (currLayerSize != nLayers[n])
          {
-            w[n][m][k] = in.readDouble();
+            throw new IllegalArgumentException(String.format("Weight file configuration mismatch at layer %d. " +
+                                                             "Expected %d but found %d.", n, nLayers[n], currLayerSize));
          }
-      }
+      } // for (int n = INPUT_LAYER_INDEX; n < numActivationLayers; n++)
 
-      n = FIRST_HIDDEN_LAYER;
-      for (int k = 0; k < numHiddenKNodes; k++)
+      for (int n = INPUT_LAYER_INDEX; n < outputLayerIndex; n++)
       {
-         for (int j = 0; j < numHiddenJNodes; j++)
+         for (int k = 0; k < nLayers[n]; k++)
          {
-            w[n][k][j] = in.readDouble();
+            for (int j = 0; j < nLayers[n + 1]; j++)
+            {
+               w[n][k][j] = in.readDouble();
+            }
          }
-      }
-
-      n = SECOND_HIDDEN_LAYER;
-      for (int j = 0; j < numHiddenJNodes; j++)
-      {
-         for (int i = 0; i < numOutputNodes; i++)
-         {
-            w[n][j][i] = in.readDouble();
-         }
-      }
+      } // for (int n = INPUT_LAYER_INDEX; n < outputLayerIndex; n++)
 
       in.close();
    } // public static void loadWeights() throws IOException
@@ -477,37 +423,21 @@ public class NLayer
    {
       DataOutputStream out = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(saveFileName)));
 
-      out.writeInt(numInputNodes);
-      out.writeInt(numHiddenKNodes);
-      out.writeInt(numHiddenJNodes);
-      out.writeInt(numOutputNodes);
-
-      int n = INPUT_LAYER;
-      for (int m = 0; m < numInputNodes; m++)
+      for (int n = INPUT_LAYER_INDEX; n < numActivationLayers; n++)
       {
-         for (int k = 0; k < numHiddenKNodes; k++)
-         {
-            out.writeDouble(w[n][m][k]);
-         }
+         out.writeInt(nLayers[n]);
       }
 
-      n = FIRST_HIDDEN_LAYER;
-      for (int k = 0; k < numHiddenKNodes; k++)
+      for (int n = INPUT_LAYER_INDEX; n < outputLayerIndex; n++)
       {
-         for (int j = 0; j < numHiddenJNodes; j++)
+         for (int k = 0; k < nLayers[n]; k++)
          {
-            out.writeDouble(w[n][k][j]);
+            for (int j = 0; j < nLayers[n + 1]; j++)
+            {
+               out.writeDouble(w[n][k][j]);
+            }
          }
-      }
-
-      n = SECOND_HIDDEN_LAYER;
-      for (int j = 0; j < numHiddenJNodes; j++)
-      {
-         for (int i = 0; i < numOutputNodes; i++)
-         {
-            out.writeDouble(w[n][j][i]);
-         }
-      }
+      } // for (int n = INPUT_LAYER_INDEX; n < outputLayerIndex; n++)
 
       out.close();
    } // public void saveWeights() throws IOException
@@ -613,8 +543,8 @@ public class NLayer
  */
    public static void defineInputActivations(int testCase)
    {
-      int n = INPUT_LAYER;
-      for (int m = 0; m < numInputNodes; m++)
+      int n = INPUT_LAYER_INDEX;
+      for (int m = 0; m < nLayers[n]; m++)
       {
          a[n][m] = inputTable[testCase][m];
       }
@@ -626,41 +556,19 @@ public class NLayer
  */
    public static void runForRunning()
    {
-      int n = FIRST_HIDDEN_LAYER;
-      for (int k = 0; k < numHiddenKNodes; k++)
+      for (int n = FIRST_HIDDEN_LAYER_INDEX; n < numActivationLayers; n++)
       {
-         double theta_k = 0.0;
-         for (int m = 0; m < numInputNodes; m++)
+         for (int j = 0; j < nLayers[n]; j++)
          {
-            theta_k += w[n - 1][m][k] * a[n - 1][m];
-         }
+            double theta_j = 0.0;
+            for (int k = 0; k < nLayers[n - 1]; k++)
+            {
+               theta_j += w[n - 1][k][j] * a[n - 1][k];
+            }
 
-         a[n][k] = fActivation(theta_k);
-      } // for (int k = 0; k < numHiddenKNodes; k++) 
-
-      n = SECOND_HIDDEN_LAYER;
-      for (int j = 0; j < numHiddenJNodes; j++)
-      {
-         double theta_j = 0.0;
-         for (int k = 0; k < numHiddenKNodes; k++)
-         {
-            theta_j += w[n - 1][k][j] * a[n - 1][k];
-         }
-
-         a[n][j] = fActivation(theta_j);
-      } // for (int j = 0; j < numHiddenJNodes; j++)
-
-      n = OUTPUT_LAYER;
-      for (int i = 0; i < numOutputNodes; i++)
-      {
-         double theta_i = 0.0;
-         for (int j = 0; j < numHiddenJNodes; j++)
-         {
-            theta_i += w[n - 1][j][i] * a[n - 1][j];
-         }
-
-         a[n][i] = fActivation(theta_i);
-      } // for (int i = 0; i < numOutputNodes; i++)
+            a[n][j] = fActivation(theta_j);
+         } // for (int j = 0; j < nLayers[n]; j++)
+      } // for (int n = FIRST_HIDDEN_LAYER_INDEX; n < numActivationLayers; n++)
    } // public static void runForRunning()
 
 /**
@@ -671,39 +579,28 @@ public class NLayer
  */
    public static double runForTraining()
    {
-      int n = FIRST_HIDDEN_LAYER;
-      for (int k = 0; k < numHiddenKNodes; k++)
+      for (int n = FIRST_HIDDEN_LAYER_INDEX; n < outputLayerIndex; n++)
       {
-         double theta_k = 0.0;
-         for (int m = 0; m < numInputNodes; m++)
+         for (int j = 0; j < nLayers[n]; j++)
          {
-            theta_k += w[n - 1][m][k] * a[n - 1][m];
-         }
+            double theta_j = 0.0;
+            for (int k = 0; k < nLayers[n - 1]; k++)
+            {
+               theta_j += w[n - 1][k][j] * a[n - 1][k];
+            }
 
-         theta[n][k] = theta_k;
-         a[n][k] = fActivation(theta[n][k]);
-      } // for (int k = 0; k < numHiddenKNodes; k++)
-
-      n = SECOND_HIDDEN_LAYER;
-      for (int j = 0; j < numHiddenJNodes; j++)
-      {
-         double theta_j = 0.0;
-         for (int k = 0; k < numHiddenKNodes; k++)
-         {
-            theta_j += w[n - 1][k][j] * a[n - 1][k];
-         }
-
-         theta[n][j] = theta_j;
-         a[n][j] = fActivation(theta[n][j]);
-      } // for (int j = 0; j < numHiddenJNodes; j++)
+            theta[n][j] = theta_j;
+            a[n][j] = fActivation(theta[n][j]);
+         } // for (int j = 0; j < nLayers[n]; j++)
+      } // for (int n = FIRST_HIDDEN_LAYER_INDEX; n < outputLayerIndex; n++)
 
       double twiceError = 0.0;
 
-      n = OUTPUT_LAYER;
-      for (int i = 0; i < numOutputNodes; i++)
+      int n = outputLayerIndex;
+      for (int i = 0; i < nLayers[n]; i++)
       {
          double theta_i = 0.0;
-         for (int j = 0; j < numHiddenJNodes; j++)
+         for (int j = 0; j < nLayers[n - 1]; j++)
          {
             theta_i += w[n - 1][j][i] * a[n - 1][j];
          }
@@ -712,7 +609,7 @@ public class NLayer
          double omega_i = targetOutputs[i] - a[n][i];
          psi[n][i] = omega_i * fPrimeActivation(theta_i);
          twiceError += omega_i * omega_i;
-      } // for (int i = 0; i < numOutputNodes; i++)
+      } // for (int i = 0; i < nLayers[n]; i++)
       
       return twiceError;
    } // public static double runForTraining()
@@ -722,26 +619,28 @@ public class NLayer
  */
    public static void train()
    {
-      int n = SECOND_HIDDEN_LAYER;
-      for (int j = 0; j < numHiddenJNodes; j++)
+      for (int n = lastHiddenLayerIndex; n >= SECOND_HIDDEN_LAYER_INDEX; n--)
       {
-         double omega_j = 0.0;
-
-         for (int i = 0; i < numOutputNodes; i++)
+         for (int j = 0; j < nLayers[n]; j++)
          {
-            omega_j += psi[n + 1][i] * w[n][j][i];
-            w[n][j][i] += lambda * a[n][j] * psi[n + 1][i];
-         }
+            double omega_j = 0.0;
 
-        psi[n][j] = omega_j * fPrimeActivation(theta[n][j]);
-      } // for (int j = 0; j < numHiddenJNodes; j++)
+            for (int i = 0; i < nLayers[n + 1]; i++)
+            {
+               omega_j += psi[n + 1][i] * w[n][j][i];
+               w[n][j][i] += lambda * a[n][j] * psi[n + 1][i];
+            }
 
-      n = FIRST_HIDDEN_LAYER;
-      for (int k = 0; k < numHiddenKNodes; k++)
+            psi[n][j] = omega_j * fPrimeActivation(theta[n][j]);
+         } // for (int j = 0; j < nLayers[n]; j++)
+      } // for (int n = lastHiddenLayerIndex; n >= SECOND_HIDDEN_LAYER_INDEX; n--)
+
+      int n = FIRST_HIDDEN_LAYER_INDEX;
+      for (int k = 0; k < nLayers[n]; k++)
       {
          double omega_k = 0.0;
 
-         for (int j = 0; j < numHiddenJNodes; j++)
+         for (int j = 0; j < nLayers[n + 1]; j++)
          {
             omega_k += psi[n + 1][j] * w[n][k][j];
             w[n][k][j] += lambda * a[n][k] * psi[n + 1][j];
@@ -749,11 +648,11 @@ public class NLayer
 
          double psi_k = omega_k * fPrimeActivation(theta[n][k]);
 
-         for (int m = 0; m < numInputNodes; m++)
+         for (int m = 0; m < nLayers[n - 1]; m++)
          {
             w[n - 1][m][k] += lambda * a[n - 1][m] * psi_k;
          }
-      } // for (int k = 0; k < numHiddenKNodes; k++)
+      } // for (int k = 0; k < nLayers[n]; k++)
    } // public static void train()
 
 /**
@@ -786,7 +685,7 @@ public class NLayer
          double twiceTotalError = 0.0;
          for (int t = 0; t < numTestCases; t++)
          {
-            for (int i = 0; i < numOutputNodes; i++)
+            for (int i = 0; i < nLayers[outputLayerIndex]; i++)
             {
                targetOutputs[i] = truthTable[t][i];
             }
@@ -815,8 +714,8 @@ public class NLayer
          defineInputActivations(t);
          runForRunning();
 
-         int n = OUTPUT_LAYER;
-         for (int i = 0; i < numOutputNodes; i++)
+         int n = outputLayerIndex;
+         for (int i = 0; i < nLayers[n]; i++)
          {
             outputActivationsRun[t][i] = a[n][i];
          }
@@ -835,7 +734,7 @@ public class NLayer
          System.out.println("Input Table:");
          for (int t = 0; t < numTestCases; t++)
          {
-            for (int m = 0; m < numInputNodes; m++)
+            for (int m = 0; m < nLayers[INPUT_LAYER_INDEX]; m++)
             {
                System.out.print(inputTable[t][m] + " ");
             }
@@ -848,7 +747,7 @@ public class NLayer
          System.out.println("Truth Table:");
          for (int t = 0; t < numTestCases; t++)
          {
-            for (int i = 0; i < numOutputNodes; i++)
+            for (int i = 0; i < nLayers[outputLayerIndex]; i++)
             {
                System.out.print(truthTable[t][i] + " ");
             }
@@ -860,12 +759,12 @@ public class NLayer
 
       for (int t = 0; t < numTestCases; t++)
       {
-         for (int m = 0; m < numInputNodes; m++)
+         for (int m = 0; m < nLayers[INPUT_LAYER_INDEX]; m++)
          {
             System.out.print(inputTable[t][m] + " ");
          }
 
-         for (int i = 0; i < numOutputNodes; i++)
+         for (int i = 0; i < nLayers[outputLayerIndex]; i++)
          {
             System.out.printf("%.4f ", outputActivationsRun[t][i]);
          }
@@ -874,12 +773,13 @@ public class NLayer
    } // public static void printRunningResults()
 
 /**
- * Does the following in order: (1) Prints the name of the configuration file, (2) Loads
- * the configuration parameters from that file, (3) Prints the relevant information regarding 
- * the configuration parameters, (4) Allocates memory for the important arrays in the 
- * network, (5) Populates the arrays, (6) Trains the network if that was set in the 
- * configuration parameters and outputs training results, (7) Runs the network, (8) If 
- * desired, saves the final weights that were successful, (9) Outputs running results. 
+ * Does the following in order: (1) Sets and prints the name of the configuration file, 
+ * (2) Loads the configuration parameters from that file, (3) Computes the derived quantities
+ * for the network, (4) Prints the relevant information regarding the configuration parameters, 
+ * (5) Allocates memory for the important arrays in the network, (6) Populates the network 
+ * arrays, (7) Trains the network if that was set in the configuration parameters and outputs 
+ * training results, (8) Runs the network, (9) If desired, saves the final weights that were 
+ * successful, and (10) Outputs running results. 
  * @param args arguments from the command line.
  */
    public static void main(String[] args) throws IOException
@@ -897,10 +797,11 @@ public class NLayer
       System.out.println("Configuration File Name: " + configFileName);
 
       loadConfigParams(configFileName);
+      setDerivedQuantities();
       echoConfigurationParams();
       allocateMem();
       populateArrays();
-
+   
       startTime = System.currentTimeMillis();
 
       if (isTraining)
@@ -920,4 +821,4 @@ public class NLayer
 
       printRunningResults();
    } // public static void main(String[] args) throws IOException
-} // public class NLayer
+} // public class NLayerNetwork
