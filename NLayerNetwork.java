@@ -11,13 +11,14 @@ import java.io.*;
  * descent with backpropagation.
  * 
  * Table of Contents:
+ * 
  * public static void loadConfigParams(String filename)
  * public static void loadInputTable()
  * public static void loadTruthTable()
  * public static void setDerivedQuantities()
  * public static void echoConfigurationParams()
  * public static void allocateMem()
- * public static void randomlyGenerateWeights()
+ * public static void randomWeights()
  * public static void loadWeights() throws IOException
  * public static void populateWeights() throws IOException
  * public static void saveWeights() throws IOException
@@ -78,7 +79,7 @@ public class NLayerNetwork
    private static double[][] outputActivationsRun; // the output activations for all test cases when running the network
 
 /**
- * Defining the constants required within the network.
+ * Defining the global variables required within the network.
  */
    private static double averageError;
    private static int numIter;
@@ -88,6 +89,10 @@ public class NLayerNetwork
    private static long endTime;
    private static int outputLayerIndex;
    private static int lastHiddenLayerIndex;
+
+/**
+ * Defining the constants required within the network.
+ */
 
    private static final String DEFAULT_CONFIG_FILE_NAME = "config.txt";
    private static final int INPUT_LAYER_INDEX = 0;
@@ -251,8 +256,9 @@ public class NLayerNetwork
  * layers, the name of the file containing the input table/truth table, what will be printed 
  * (input table, truth table, etc...), from where the weights are being taken, etc... If the 
  * network is training, it will output the name of the file containing the truth table, the 
- * random number range, the maximum number of iterations for training, the error threshold, 
- * and the value of the learning rate, lambda.
+ * random number range, the maximum number of iterations for training, the keep alive, which 
+ * is the number of iterations between messages (or no output if it is set to zero), the 
+ * error threshold, and the value of the learning rate, lambda.
  */
    public static void echoConfigurationParams()
    {
@@ -287,6 +293,7 @@ public class NLayerNetwork
          System.out.println("The network will train first and then run");
          System.out.println("Random Weights Range: (" + randomLowBound + ", " + randomHighBound + ")");
          System.out.println("Learning Rate: " + lambda);
+         System.out.println("Keep Alive: " + keepAlive);
          System.out.println("Maximum Number of Iterations: " + maximumIter);
          System.out.println("Error Threshold: " + idealErr);
       } // if (isTraining)
@@ -313,8 +320,6 @@ public class NLayerNetwork
    public static void allocateMem()
    {
       inputTable = new double[numTestCases][nLayers[INPUT_LAYER_INDEX]];
-      targetOutputs = new double[nLayers[outputLayerIndex]];
-
       a = new double[numActivationLayers][];
       w = new double[numActivationLayers - 1][][];
 
@@ -331,6 +336,7 @@ public class NLayerNetwork
       if (isTraining)
       {
          truthTable = new double[numTestCases][nLayers[outputLayerIndex]];
+         targetOutputs = new double[nLayers[outputLayerIndex]];
 
          theta = new double[numActivationLayers - 1][];
          psi = new double[numActivationLayers][];
@@ -353,7 +359,7 @@ public class NLayerNetwork
  * Sets the weights of the network to randomly generated values within bounds provided
  * in the network configuration.
  */
-   public static void randomlyGenerateWeights()
+   public static void randomWeights()
    {
       for (int n = INPUT_LAYER_INDEX; n < outputLayerIndex; n++)
       {
@@ -365,7 +371,7 @@ public class NLayerNetwork
             }
          }
       } // for (int n = INPUT_LAYER_INDEX; n < outputLayerIndex; n++)
-   } // public static void randomlyGenerateWeights()
+   } // public static void randomWeights()
 
 /**
  * Loads the weights for the network from the file whose name is provided in the network 
@@ -407,7 +413,7 @@ public class NLayerNetwork
    {
       if (getWeights.equalsIgnoreCase("random"))
       {
-         randomlyGenerateWeights();
+         randomWeights();
       }
       else if (getWeights.equalsIgnoreCase("load"))
       {
@@ -650,11 +656,9 @@ public class NLayerNetwork
             w[n][k][j] += lambda * a[n][k] * psi[n + 1][j];
          }
 
-         double psi_k = omega_k * fPrimeActivation(theta[n][k]);
-
          for (int m = 0; m < nLayers[n - 1]; m++)
          {
-            w[n - 1][m][k] += lambda * a[n - 1][m] * psi_k;
+            w[n - 1][m][k] += lambda * a[n - 1][m] * omega_k * fPrimeActivation(theta[n][k]);
          }
       } // for (int k = 0; k < nLayers[n]; k++)
    } // public static void train()
