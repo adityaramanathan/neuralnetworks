@@ -320,6 +320,7 @@ public class NLayerNetwork
    public static void allocateMem()
    {
       inputTable = new double[numTestCases][nLayers[INPUT_LAYER_INDEX]];
+
       a = new double[numActivationLayers][];
       w = new double[numActivationLayers - 1][][];
 
