@@ -71,7 +71,6 @@ public class NLayerNetwork
  */
    private static double[][] inputTable;           // the input table for the network to train or run
    private static double[][] truthTable;           // the truth table for the network to train
-   private static double[] targetOutputs;          // the target output activations for a specific training case
    private static double[][] a;                    // the activations for all layers in the network
    private static double[][][] w;                  // the weights for all layers in the network
    private static double[][] theta;                // the theta values for the network
@@ -337,7 +336,6 @@ public class NLayerNetwork
       if (isTraining)
       {
          truthTable = new double[numTestCases][nLayers[outputLayerIndex]];
-         targetOutputs = new double[nLayers[outputLayerIndex]];
 
          theta = new double[numActivationLayers - 1][];
          psi = new double[numActivationLayers][];
@@ -586,9 +584,10 @@ public class NLayerNetwork
  * Runs the network once given a specific training case while training the network. 
  * First, it computes the output activation given a specific set of input activations.
  * Then, it computes twice the error for efficiency, and it returns that value.
+ * @param t the current training case being trained.
  * @return 2 * error for the particular training case.
  */
-   public static double runForTraining()
+   public static double runForTraining(int t)
    {
       for (int n = FIRST_HIDDEN_LAYER_INDEX; n < outputLayerIndex; n++)
       {
@@ -617,7 +616,7 @@ public class NLayerNetwork
          }
 
          a[n][i] = fActivation(theta_i);
-         double omega_i = targetOutputs[i] - a[n][i];
+         double omega_i = truthTable[t][i] - a[n][i];
          psi[n][i] = omega_i * fPrimeActivation(theta_i);
          twiceError += omega_i * omega_i;
       } // for (int i = 0; i < nLayers[n]; i++)
@@ -657,9 +656,11 @@ public class NLayerNetwork
             w[n][k][j] += lambda * a[n][k] * psi[n + 1][j];
          }
 
+         double psi_k = omega_k * fPrimeActivation(theta[n][k]);
+
          for (int m = 0; m < nLayers[n - 1]; m++)
          {
-            w[n - 1][m][k] += lambda * a[n - 1][m] * omega_k * fPrimeActivation(theta[n][k]);
+            w[n - 1][m][k] += lambda * a[n - 1][m] * psi_k;
          }
       } // for (int k = 0; k < nLayers[n]; k++)
    } // public static void train()
@@ -694,13 +695,8 @@ public class NLayerNetwork
          double twiceTotalError = 0.0;
          for (int t = 0; t < numTestCases; t++)
          {
-            for (int i = 0; i < nLayers[outputLayerIndex]; i++)
-            {
-               targetOutputs[i] = truthTable[t][i];
-            }
-
             defineInputActivations(t);
-            twiceTotalError += runForTraining();
+            twiceTotalError += runForTraining(t);
             train();
          } // for (int t = 0; t < numTestCases; t++)
 
