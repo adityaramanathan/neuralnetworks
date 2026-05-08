@@ -1,0 +1,20 @@
+3;                // num connectivity layers
+65536 25 10 5;         // network configuration
+Folder;                    // "File" => load inputs from binary file, "Folder" => load inputs from a folder with binary files
+inputTrainImages.txt;        // input table file name
+truthImages.txt;        // truth table file name
+true;    // whether the network is training or not
+false;    // whether the input table should be printed
+false;    // whether the truth table should be printed
+true;    // whether the final weights should be saved to a file
+Random;  // "Random" => randomly generated weights, "Load" => load weights from a file
+weights.bin;      // the name of the file to load from if that is desired
+weights.bin;      // the name of the file to save the weights if that is desired
+-0.1;     // the lower bound for the random number generation
+0.1;     // the upper bound for the random number generation
+100000;  // the maximum number of iterations for training
+0.0002;  // the upper error bound to stop training
+0.3;     // the value of lambda
+1000;       // the value of the keepAlive, the number of iterations between messages, set to 0 for no output
+25;       // the number of test numTestCases
+Sigmoid; // the type of activation function

@@ -13,7 +13,8 @@ import java.io.*;
  * Table of Contents:
  * 
  * public static void loadConfigParams(String filename)
- * public static void loadInputTable()
+ * public static void loadInputTableFile()
+ * public static void loadInputTableFolder()
  * public static void loadTruthTable()
  * public static void setDerivedQuantities()
  * public static void echoConfigurationParams()
@@ -48,6 +49,7 @@ public class NLayerNetwork
  */
    private static int numActivationLayers;   // number of activation layers in the network
    private static int[] nLayers;             // number of nodes in each layer
+   private static String fileOrFolder;       // whether loading inputs from file or folder
    private static String inputFileName;      // name of the file containing the input table
    private static String truthFileName;      // name of the file containing the output table
    private static boolean isTraining;        // flag to show whether network should be trained
@@ -125,6 +127,9 @@ public class NLayerNetwork
          }
 
          line = br.readLine();
+         fileOrFolder = line.substring(0, line.indexOf(';')).trim();
+
+         line = br.readLine();
          inputFileName = line.substring(0, line.indexOf(';')).trim();
 
          line = br.readLine();
@@ -186,7 +191,7 @@ public class NLayerNetwork
  * Populates the input table for the network to train or run by reading a binary input 
  * file. The file name is provided in the network configuration. 
  */
-   public static void loadInputTable()
+   public static void loadInputTableFile()
    {
       try (DataInputStream in = new DataInputStream(new BufferedInputStream(new FileInputStream(inputFileName))))
       {
@@ -203,7 +208,48 @@ public class NLayerNetwork
          System.out.println("Input table binary file not formatted as expected.");
          e.printStackTrace();
       } // catch (IOException e)
-   } // public static void loadInputTable()
+   } // public static void loadInputTableFile()
+
+/**
+ * Populates the input table for the network to train or run by reading a folder of binary 
+ * input files. The input file is a .txt file in the network configuration that contains
+ * the path to all the binary files within the folder to be read. 
+ */
+   public static void loadInputTableFolder()
+   {
+      try (BufferedReader br = new BufferedReader(new FileReader(inputFileName)))
+      {
+         String imagePath;
+         int row = 0;
+
+         while ((imagePath = br.readLine()) != null && row < numTestCases)
+         {
+            imagePath = imagePath.trim();
+
+            try (DataInputStream in = new DataInputStream(new BufferedInputStream(new FileInputStream(imagePath))))
+            {
+               for (int col = 0; col < nLayers[INPUT_LAYER_INDEX]; col++)
+               {
+                  inputTable[row][col] = in.readDouble();
+               }
+            }
+            catch (Exception e) 
+            {
+               System.out.println("Input case binary file not formatted as expected.");
+               e.printStackTrace();
+            }
+
+            row++;
+         } // while ((imagePath = br.readLine()) != null && row < numTestCases)
+
+         br.close();
+      } // try (BufferedReader br = new BufferedReader(new FileReader(inputFileName)))
+      catch (IOException e)
+      {
+         System.out.println("Input image folder not formatted as expected.");
+         e.printStackTrace();
+      } // catch (IOException e)
+   } // public static void loadInputTableFolder()
 
 /**
  * Populates the truth table for the network to train, if and only if training the network is 
@@ -457,7 +503,18 @@ public class NLayerNetwork
  */
    public static void populateArrays() throws IOException
    {
-      loadInputTable();
+      if (fileOrFolder.equalsIgnoreCase("file"))
+      {
+         loadInputTableFile();
+      }
+      else if (fileOrFolder.equalsIgnoreCase("folder"))
+      {
+         loadInputTableFolder();
+      }
+      else
+      {
+         throw new IllegalArgumentException("The configuration for loading inputs is invalid.");
+      }
 
       if (isTraining)
       {
@@ -769,17 +826,12 @@ public class NLayerNetwork
 
       for (int t = 0; t < numTestCases; t++)
       {
-         for (int m = 0; m < nLayers[INPUT_LAYER_INDEX]; m++)
-         {
-            System.out.print(inputTable[t][m] + " ");
-         }
-
          for (int i = 0; i < nLayers[outputLayerIndex]; i++)
          {
-            System.out.printf("%.4f ", outputActivationsRun[t][i]);
+            System.out.printf("%.2f ", outputActivationsRun[t][i]);
          }
          System.out.println();
-      } // for (int t = 0; t < numTestCases; t++)
+      }
    } // public static void printRunningResults()
 
 /**
