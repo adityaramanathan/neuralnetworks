@@ -1,0 +1,49 @@
+TRAINING SESSION 1 - SUCCESS!
+---------------------------------------------------------------
+Configuration File Name: configTrainImages.txt
+Network Configuration: 65536-25-10-5
+Input table loaded from folder of files listed in inputTrainImages.txt
+Truth table loaded from truthImages.txt
+The network will train first and then run
+Random Weights Range: (-0.1, 0.1)
+Learning Rate: 0.3
+Keep Alive: 1000
+Maximum Number of Iterations: 100000
+Error Threshold: 2.0E-4
+The final weights will be saved to weights.bin
+The weights are obtained from Random
+Activation Function: Sigmoid
+Number of Test Cases: 25
+Iteration 1000, Error = 0.000486
+Iteration 2000, Error = 0.000219
+The training ended because the error threshold was reached.
+The number of iterations was 2170.
+The average error reached was 0.0002.
+The time it took for training/running was 609055ms
+Results from Running:
+0.99 0.01 0.01 0.00 0.01
+0.99 0.01 0.01 0.00 0.01
+0.99 0.01 0.01 0.00 0.01
+0.99 0.01 0.01 0.00 0.01
+0.99 0.01 0.01 0.00 0.01
+0.01 0.99 0.01 0.00 0.00
+0.01 0.99 0.01 0.00 0.00
+0.01 0.99 0.01 0.00 0.00
+0.01 0.99 0.01 0.00 0.00
+0.01 0.99 0.01 0.00 0.00
+0.00 0.01 0.99 0.01 0.00
+0.00 0.01 0.99 0.01 0.00
+0.00 0.01 0.99 0.01 0.00
+0.00 0.01 0.99 0.01 0.00
+0.00 0.01 0.99 0.01 0.00
+0.00 0.00 0.01 0.99 0.01
+0.00 0.00 0.01 0.99 0.01
+0.00 0.00 0.01 0.99 0.01
+0.00 0.00 0.01 0.99 0.01
+0.00 0.00 0.01 0.99 0.01
+0.01 0.00 0.00 0.01 0.99
+0.01 0.00 0.00 0.01 0.99
+0.01 0.00 0.00 0.01 0.99
+0.01 0.00 0.00 0.01 0.99
+0.01 0.00 0.00 0.01 0.99
+---------------------------------------------------------------

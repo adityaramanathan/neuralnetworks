@@ -1,5 +1,6 @@
 3;                // num connectivity layers
 2 100 5 3;         // network configuration
+File;                    // "File" => load inputs from binary file, "Folder" => load inputs from a folder with binary files where each file is an input case
 inputAlt.bin;        // input table file name
 truth3OutputAlt.txt;        // truth table file name
 true;    // whether the network is training or not

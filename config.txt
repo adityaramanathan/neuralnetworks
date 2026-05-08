@@ -1,6 +1,6 @@
 6;                // num connectivity layers
 2 5 10 20 40 80 3;         // network configuration
-File;                    // "File" => load inputs from binary file, "Folder" => load inputs from a folder with binary files
+File;                    // "File" => load inputs from binary file, "Folder" => load inputs from a folder with binary files where each file is an input case
 input.bin;        // input table file name
 truth3Output.txt;        // truth table file name
 true;    // whether the network is training or not

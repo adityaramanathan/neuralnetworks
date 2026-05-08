@@ -49,7 +49,7 @@ public class NLayerNetwork
  */
    private static int numActivationLayers;   // number of activation layers in the network
    private static int[] nLayers;             // number of nodes in each layer
-   private static String fileOrFolder;       // whether loading inputs from file or folder
+   private static String fileOrFolder;       // whether loading inputs from a binary file or folder with binary files
    private static String inputFileName;      // name of the file containing the input table
    private static String truthFileName;      // name of the file containing the output table
    private static boolean isTraining;        // flag to show whether network should be trained
@@ -319,7 +319,19 @@ public class NLayerNetwork
       } // for (int n = 0; n < numActivationLayers; n++)
 
       System.out.println("Network Configuration: " + networkConfig);
-      System.out.println("Input table loaded from " + inputFileName);
+
+      if (fileOrFolder.equalsIgnoreCase("file"))
+      {
+         System.out.println("Input table loaded from " + inputFileName);
+      }
+      else if (fileOrFolder.equalsIgnoreCase("folder"))
+      {
+         System.out.println("Input table loaded from folder of files listed in " + inputFileName);
+      }
+      else
+      {
+         throw new IllegalArgumentException("The configuration for loading inputs is invalid.");
+      }
 
       if (showInputTable)
       {
