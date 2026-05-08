@@ -8,8 +8,8 @@ false;    // whether the input table should be printed
 false;    // whether the truth table should be printed
 true;    // whether the final weights should be saved to a file
 Random;  // "Random" => randomly generated weights, "Load" => load weights from a file
-weights.bin;      // the name of the file to load from if that is desired
-weights.bin;      // the name of the file to save the weights if that is desired
+weightsImages.bin;      // the name of the file to load from if that is desired
+weightsImages.bin;      // the name of the file to save the weights if that is desired
 -0.1;     // the lower bound for the random number generation
 0.1;     // the upper bound for the random number generation
 100000;  // the maximum number of iterations for training

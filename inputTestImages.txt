@@ -1,5 +1,5 @@
-imgProcActivationFiles/1e.bin
-imgProcActivationFiles/2e.bin
-imgProcActivationFiles/3e.bin
-imgProcActivationFiles/4e.bin
-imgProcActivationFiles/5e.bin
+imageInputActivations/1e.bin
+imageInputActivations/2e.bin
+imageInputActivations/3e.bin
+imageInputActivations/4e.bin
+imageInputActivations/5e.bin
